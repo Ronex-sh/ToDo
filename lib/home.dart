@@ -9,9 +9,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _globalKey,
       appBar: AppBar(
         title: Text(widget.title),
       ),
@@ -44,12 +46,17 @@ class _HomeState extends State<Home> {
                     )),
                 Expanded(
                     flex: 7,
-                    child: Text(
-                      items[index].body,
-                      style: TextStyle(
-                          color: items[index].isCompleted
-                              ? Colors.grey
-                              : Colors.black),
+                    child: GestureDetector(
+                      onDoubleTap: () {
+                        _updateItem(items, index);
+                      },
+                      child: Text(
+                        items[index].body,
+                        style: TextStyle(
+                            color: items[index].isCompleted
+                                ? Colors.grey
+                                : Colors.black),
+                      ),
                     )),
                 Expanded(
                     flex: 2,
@@ -111,9 +118,13 @@ class _HomeState extends State<Home> {
             actions: <Widget>[
               FlatButton.icon(
                   onPressed: () {
-                    items.add(Todo(editingController.text));
+                    if (editingController.text.isNotEmpty) {
+                      items.add(Todo(editingController.text));
+                      snack_bar('you add item');
 
-                    setState(() {});
+                      setState(() {});
+                    }
+
                     Navigator.pop(context);
                   },
                   icon: Icon(Icons.save),
@@ -127,5 +138,53 @@ class _HomeState extends State<Home> {
             ],
           );
         });
+  }
+
+  void _updateItem(List<Todo> items, int index) {
+    TextEditingController editingController =
+        TextEditingController(text: items[index].body);
+    showDialog(
+        context: (context),
+        builder: (context) {
+          return AlertDialog(
+            title: Text('update Item'),
+            content: Column(
+              children: <Widget>[
+                Text('update this item:\n${items[index].body}'),
+                TextField(
+                  controller: editingController,
+                )
+              ],
+            ),
+            actions: <Widget>[
+              FlatButton.icon(
+                  onPressed: () {
+                    if (editingController.text.isNotEmpty) {
+                      items[index].body = editingController.text;
+                      snack_bar('you update item to :${items[index].body} ');
+
+                      setState(() {});
+                    }
+
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.update),
+                  label: Text('update')),
+              FlatButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.cancel),
+                  label: Text('cancel')),
+            ],
+          );
+        });
+  }
+
+  void snack_bar(String str) {
+    SnackBar snackBar = SnackBar(
+      content: Text(str),
+    );
+    _globalKey.currentState.showSnackBar(snackBar);
   }
 }
